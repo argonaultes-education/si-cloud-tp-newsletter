@@ -1,0 +1,75 @@
+<html>
+    <head>
+        <style>
+            body {
+                background-image: url({{ url_for('static', filename='bg1.jpg') }});
+                background-size: cover;
+                background-repeat: no-repeat;
+            }
+            h1 {
+                color: green;
+                text-align: center;
+                font-size: 100pt;
+                font-family: 'Courier New', Courier, monospace;
+            }
+            form {
+                text-align: center;
+            }
+            #labelidentifier {
+                color: white;
+                font-size: 2em;
+            }
+            #identifier {
+                color: black;
+                font-size: 3em;
+                text-align: center;
+            }
+            .click-sub {
+                color: black;
+                font-size: 2.5em;
+                text-align: center;
+                margin-top: 50px;
+            }
+            .click-sub a {
+                text-decoration: none;
+                color: white;
+                border: 2px black solid;
+                border-radius: 5px;                
+            }
+            .click-sub a:hover {
+                text-decoration: none;
+                color: white;
+                border: 2px white solid;
+                border-radius: 5px;                
+            }
+            .click-sub a:visited {
+                text-decoration: none;
+            }
+            #register {
+                font-size: 2em;
+            }
+            .form-div {
+                margin-bottom: 50px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Authentication</h1>
+        {% if identifier %}
+            <div id="identifier">{{ identifier }}</div>
+            <div class="click-sub">Click to <a href="{{ url_for('subscribe')}}">subscribe</a> now</div>
+        {% else %}
+        <form>
+            <div class="form-div">
+                <label for="identifier" id="labelidentifier">Give your identifier</label>
+            </div>
+            <div class="form-div">
+                <input type="text" maxlength="2" id="identifier" name="identifier">
+            </div>
+            <div>
+                <input type="submit" value="Register" id="register">
+            </div>
+        </form>
+        {% endif %}
+    </body>
+</html>
