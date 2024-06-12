@@ -93,8 +93,9 @@ def subscribe():
     if email:
         with sqlite3.connect('newsletter.db') as conn:
             res = conn.execute(f'SELECT email, subscribed_at FROM subscribers WHERE email = \'{email}\'')
-            if res.fetchone() is not None:
-                res_email, res_sub = res.fetchone()
+            email_sub = res.fetchone()
+            if  email_sub is not None:
+                res_email, res_sub = email_sub
             # flash notice
     return render_template('subscribe.html', email = res_email, sub = res_sub)
 
