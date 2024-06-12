@@ -33,7 +33,13 @@
             #subscribe {
                 font-size: 2em;
             }
+            #check {
+                font-size: 2em;
+            }
             .form-div {
+                margin-bottom: 50px;
+            }
+            .spacer {
                 margin-bottom: 50px;
             }
         </style>
@@ -58,5 +64,17 @@
             </div>
         </form>
         {% endif %}
+        <div class="spacer">&nbsp;</div>
+        <form action="{{ url_for('subscribe')}}" method="GET">
+            <div class="form-div">
+                <label for="email" id="labelemail">E-Mail</label>
+            </div>
+            <div class="form-div">
+                <input type="text" id="email" name="email">
+            </div>
+            <div>
+                <input type="submit" value="Check" id="Check">
+            </div>
+        </form>
     </body>
 </html>

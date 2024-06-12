@@ -5,6 +5,7 @@ import sqlite3
 import datetime
 import os
 import re
+from prometheus_client import start_http_server, Counter, Gauge
 
 # create tables in sqlite
 try:
@@ -56,23 +57,26 @@ def index():
 # display welcome page with form identifier
 @app.route('/welcome')
 def welcome():
-    identifier = request.args.get('identifier', '')
+    identifier = request.args.get('identifier', '').lower()
     response = identifier
-    if (len(identifier) == 2 and re.search('^[a-z]{2}$', identifier.lower())):
+    if (len(identifier) == 2 and re.search('^[a-z]{2}$', identifier)):
         if identifier in app_counter.keys():
             counter = app_counter[identifier]['counter'] + 1
             start_date = app_counter[identifier]['start_date']
+            app_counter[identifier]['g'].inc(1.3)
+            g = app_counter[identifier]['g']
         else:
+            g = Gauge(f'gauge_{identifier}', f'count http requests of {identifier}')
+            g.set(1985)
             counter = 0
             start_date = datetime.datetime.now()
         app_counter[identifier] = {
             'counter': counter,
             'start_date': start_date,
-            'last_date': datetime.datetime.now()
+            'last_date': datetime.datetime.now(),
+            'g': g
         }
         nb_seconds_elapsed = (app_counter[identifier]['last_date'] - app_counter[identifier]['start_date']).total_seconds()
-        print(nb_seconds_elapsed)
-        print(app_counter[identifier])
         if app_counter[identifier]['counter'] >= MAX_QUERIES and nb_seconds_elapsed > 300:
             response_hash = hmac.new(SECRET_KEY, identifier.encode('UTF-8'), md5)
             response = response_hash.hexdigest()
@@ -91,6 +95,7 @@ def subscribe():
             res = conn.execute(f'SELECT email, subscribed_at FROM subscribers WHERE email = \'{email}\'')
             if res.fetchone() is not None:
                 res_email, res_sub = res.fetchone()
+            # flash notice
     return render_template('subscribe.html', email = res_email, sub = res_sub)
 
 @app.post('/subscribe')
@@ -109,3 +114,4 @@ def subscribe_email():
     return render_template('subscribe.html', email = res_email, sub = res_subscribed_at)
 
 # display newsletter subscription result
+start_http_server(int(os.getenv('METRICS_PORT', '9000')))
