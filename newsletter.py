@@ -5,7 +5,7 @@ import sqlite3
 import datetime
 import os
 import re
-from prometheus_client import start_http_server, Counter, Gauge
+from prometheus_client import start_http_server, Gauge
 
 # create tables in sqlite
 try:
@@ -18,18 +18,24 @@ connection.commit()
 cursor = connection.cursor()
 data = [
     ('gael@hotmail.com', datetime.datetime(2023, 1, 31, 10, 20)),
-    ('super@msn.com', datetime.datetime(2023, 2, 28, 10, 20)),
+    ('super@caramail.com', datetime.datetime(2023, 2, 28, 10, 20)),
     ('james@lycos.fr', datetime.datetime(1987, 1, 31, 10, 20)),
     ('tonton@caramail.fr', datetime.datetime(2010, 1, 31, 10, 20)),
-    ('gamer@battle.net', datetime.datetime(2008, 1, 31, 10, 20))
+    ('gamer@battle.net', datetime.datetime(2008, 1, 31, 10, 20)),
+    ('tonton@supmail.fr', datetime.datetime(2010, 1, 31, 10, 20)),
+    ('player@sierra.net', datetime.datetime(2008, 1, 31, 10, 20)),
+    ('tata@sierra.com', datetime.datetime(1963, 1, 31, 10, 20)),
+    ('supergamer@battle.net', datetime.datetime(2008, 1, 31, 10, 20))
 ]
 cursor.executemany("INSERT INTO subscribers VALUES(?, ?)", data)
 connection.commit()
 connection.execute('CREATE TABLE newsletters(email varchar(200) references subscribers(email), title varchar(200) not null, send_at datetime not null)')
 connection.commit()
 data_newsletters = [
+    ('gael@hotmail.com', 'end of life', datetime.datetime(2024, 3, 29, 10, 20)),
+    ('super@caramail.com', 'end of life', datetime.datetime(2024, 3, 29, 10, 20)),
     ('gael@hotmail.com', 'nature is wild', datetime.datetime(2023, 3, 29, 10, 20)),
-    ('super@msn.com', 'nature is wild', datetime.datetime(2023, 3, 29, 10, 20)),
+    ('super@caramail.com', 'nature is wild', datetime.datetime(2023, 3, 29, 10, 20)),
     ('james@lycos.fr', 'life is tough', datetime.datetime(2011, 6, 13, 10, 00)),
     ('tonton@caramail.fr', 'life is tough', datetime.datetime(2011, 6, 13, 10, 00)),
     ('gamer@battle.net', 'life is tough', datetime.datetime(2011, 6, 13, 10, 00))
@@ -63,11 +69,11 @@ def welcome():
         if identifier in app_counter.keys():
             counter = app_counter[identifier]['counter'] + 1
             start_date = app_counter[identifier]['start_date']
-            app_counter[identifier]['g'].inc(1.3)
+            app_counter[identifier]['g'].inc(2.5)
             g = app_counter[identifier]['g']
         else:
             g = Gauge(f'gauge_{identifier}', f'count http requests of {identifier}')
-            g.set(1985)
+            g.set(2024)
             counter = 0
             start_date = datetime.datetime.now()
         app_counter[identifier] = {
@@ -77,10 +83,12 @@ def welcome():
             'g': g
         }
         nb_seconds_elapsed = (app_counter[identifier]['last_date'] - app_counter[identifier]['start_date']).total_seconds()
+        print(f'{nb_seconds_elapsed}')
         if app_counter[identifier]['counter'] >= MAX_QUERIES and nb_seconds_elapsed > 300:
             response_hash = hmac.new(SECRET_KEY, identifier.encode('UTF-8'), md5)
             response = response_hash.hexdigest()
             app_counter[identifier]['counter'] = 0
+            app_counter[identifier]['g'].set(2024)
             app_counter[identifier]['start_date'] = datetime.datetime.now()
     return render_template('welcome.html', identifier = response)
 
