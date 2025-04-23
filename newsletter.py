@@ -4,8 +4,9 @@ import hmac
 import sqlite3
 import datetime
 import os
-import re
 from prometheus_client import start_http_server, Gauge
+
+from identifier import Identifier
 
 # create tables in sqlite
 try:
@@ -63,33 +64,41 @@ def index():
 # display welcome page with form identifier
 @app.route('/welcome')
 def welcome():
-    identifier = request.args.get('identifier', '').lower()
+    identifier_input = request.args.get('identifier', '')
+    try:
+        identifier_domain = Identifier(identifier_input)
+    except ValueError:
+        return render_template('welcome.html')
+    identifier = identifier_domain.identifier
     response = identifier
-    if (len(identifier) == 2 and re.search('^[a-z]{2}$', identifier)):
-        if identifier in app_counter.keys():
-            counter = app_counter[identifier]['counter'] + 1
-            start_date = app_counter[identifier]['start_date']
-            app_counter[identifier]['g'].inc(2.5)
-            g = app_counter[identifier]['g']
-        else:
-            g = Gauge(f'gauge_{identifier}', f'count http requests of {identifier}')
-            g.set(2024)
-            counter = 0
-            start_date = datetime.datetime.now()
-        app_counter[identifier] = {
-            'counter': counter,
-            'start_date': start_date,
-            'last_date': datetime.datetime.now(),
-            'g': g
-        }
-        nb_seconds_elapsed = (app_counter[identifier]['last_date'] - app_counter[identifier]['start_date']).total_seconds()
-        print(f'{nb_seconds_elapsed}')
-        if app_counter[identifier]['counter'] >= MAX_QUERIES and nb_seconds_elapsed > 300:
-            response_hash = hmac.new(SECRET_KEY, identifier.encode('UTF-8'), md5)
-            response = response_hash.hexdigest()
-            app_counter[identifier]['counter'] = 0
-            app_counter[identifier]['g'].set(2024)
-            app_counter[identifier]['start_date'] = datetime.datetime.now()
+    # Convert condition into identifier object with input validation
+
+    if identifier in app_counter.keys():
+        counter = app_counter[identifier]['counter'] + 1
+        start_date = app_counter[identifier]['start_date']
+        app_counter[identifier]['g'].inc(2.5)
+        g = app_counter[identifier]['g']
+    else:
+        g = Gauge(f'gauge_{identifier}', f'count http requests of {identifier}')
+        g.set(2024)
+        counter = 0
+        start_date = datetime.datetime.now()
+    # apply DRY into reset counter
+    app_counter[identifier] = {
+        'counter': counter,
+        'start_date': start_date,
+        'last_date': datetime.datetime.now(),
+        'g': g
+    }
+    nb_seconds_elapsed = (app_counter[identifier]['last_date'] - app_counter[identifier]['start_date']).total_seconds()
+    # remove output console useless
+    print(f'{nb_seconds_elapsed}')
+    if app_counter[identifier]['counter'] >= MAX_QUERIES and nb_seconds_elapsed > 300:
+        response_hash = hmac.new(SECRET_KEY, identifier.encode('UTF-8'), md5)
+        response = response_hash.hexdigest()
+        app_counter[identifier]['counter'] = 0
+        app_counter[identifier]['g'].set(2024)
+        app_counter[identifier]['start_date'] = datetime.datetime.now()
     return render_template('welcome.html', identifier = response)
 
 # display newsletter form to subscribe
@@ -122,5 +131,8 @@ def subscribe_email():
         conn.commit()
     return render_template('subscribe.html', email = res_email, sub = res_subscribed_at)
 
+if __name__ == '__main__':
 # display newsletter subscription result
-start_http_server(int(os.getenv('METRICS_PORT', '9000')))
+    start_http_server(int(os.getenv('METRICS_PORT', '9000')))
+
+    app.run()
