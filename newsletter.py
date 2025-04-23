@@ -1,12 +1,12 @@
 from flask import Flask, request, redirect, url_for, render_template
-from hashlib import md5
-import hmac
+
 import sqlite3
 import datetime
 import os
-from prometheus_client import start_http_server, Gauge
+from prometheus_client import start_http_server
 
 from identifier import Identifier
+from app_counter import AppCounter
 
 # create tables in sqlite
 try:
@@ -45,11 +45,6 @@ cursor.executemany("INSERT INTO newsletters VALUES(?, ?, ?)", data_newsletters)
 connection.commit()
 connection.close()
 
-SECRET_KEY=b'secret'
-
-MAX_QUERIES=300
-
-app_counter = {}
 
 app = Flask(__name__)
 
@@ -69,37 +64,11 @@ def welcome():
         identifier_domain = Identifier(identifier_input)
     except ValueError:
         return render_template('welcome.html')
-    identifier = identifier_domain.identifier
-    response = identifier
-    # Convert condition into identifier object with input validation
 
-    if identifier in app_counter.keys():
-        counter = app_counter[identifier]['counter'] + 1
-        start_date = app_counter[identifier]['start_date']
-        app_counter[identifier]['g'].inc(2.5)
-        g = app_counter[identifier]['g']
-    else:
-        g = Gauge(f'gauge_{identifier}', f'count http requests of {identifier}')
-        g.set(2024)
-        counter = 0
-        start_date = datetime.datetime.now()
-    # apply DRY into reset counter
-    app_counter[identifier] = {
-        'counter': counter,
-        'start_date': start_date,
-        'last_date': datetime.datetime.now(),
-        'g': g
-    }
-    nb_seconds_elapsed = (app_counter[identifier]['last_date'] - app_counter[identifier]['start_date']).total_seconds()
-    # remove output console useless
-    print(f'{nb_seconds_elapsed}')
-    if app_counter[identifier]['counter'] >= MAX_QUERIES and nb_seconds_elapsed > 300:
-        response_hash = hmac.new(SECRET_KEY, identifier.encode('UTF-8'), md5)
-        response = response_hash.hexdigest()
-        app_counter[identifier]['counter'] = 0
-        app_counter[identifier]['g'].set(2024)
-        app_counter[identifier]['start_date'] = datetime.datetime.now()
-    return render_template('welcome.html', identifier = response)
+    app_counter = AppCounter()
+    app_counter.add_counter(identifier_domain)
+    validation_code = app_counter.get_validation_code(identifier_domain)
+    return render_template('welcome.html', identifier = validation_code)
 
 # display newsletter form to subscribe
 @app.get('/subscribe')

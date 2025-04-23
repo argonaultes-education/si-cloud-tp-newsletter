@@ -8,10 +8,16 @@ class TestWelcome(flask_unittest.ClientTestCase):
     app = my_app 
 
     def test_welcome_identifier(self, client):
-        identifiers = ['a', 'az', '1341', '12']
+        identifiers = ['az', 'az', 'BB', 'rZ']
         for identifier in identifiers:
             rv = client.get(f'/welcome?identifier={identifier}')
-            self.assertInResponse(f'{identifier}'.encode('UTF-8'), rv)
+            self.assertInResponse(f'{identifier.lower()}'.encode('UTF-8'), rv)
+
+    def test_welcome_bad_identifier(self, client):
+        identifiers = ['a', 'azf', '1341', '12']
+        for identifier in identifiers:
+            rv = client.get(f'/welcome?identifier={identifier}')
+            self.assertInResponse(b'Give your identifier', rv)
 
     def test_welcome(self, client):
         rv = client.get('/welcome')
