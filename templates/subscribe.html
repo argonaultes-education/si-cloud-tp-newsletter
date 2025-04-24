@@ -48,11 +48,12 @@
         <h1>Newsletter subscription</h1>
         {% if email %}
             <div class="email-ok">Congratulations</div>
-            <div class="email-ok"><strong>{{ email }}</strong></div>
+            <div class="email-ok" id="email"></div>
             <div class="email-ok">subscribed at</div>
             <div class="email-ok"><strong>{{ sub }}</strong></div>
         {% else %}
         <form action="{{ url_for('subscribe')}}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="form-div">
                 <label for="email" id="labelemail">E-Mail</label>
             </div>
@@ -77,4 +78,9 @@
             </div>
         </form>
     </body>
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById('email').innerHTML = "{{email}}"
+        });
+    </script>
 </html>

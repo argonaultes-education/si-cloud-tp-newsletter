@@ -1,4 +1,6 @@
 from flask import Flask, request, redirect, url_for, render_template
+import flask
+
 
 import sqlite3
 import datetime
@@ -7,8 +9,13 @@ from prometheus_client import start_http_server
 
 from identifier import Identifier
 from app_counter import AppCounter
+from email_validator import EmailValidator
 
-# create tables in sqlite
+from flask_wtf.csrf import CSRFProtect
+
+
+
+#create tables in sqlite
 try:
     os.remove('newsletter.db')
 except:
@@ -26,7 +33,8 @@ data = [
     ('tonton@supmail.fr', datetime.datetime(2010, 1, 31, 10, 20)),
     ('player@sierra.net', datetime.datetime(2008, 1, 31, 10, 20)),
     ('tata@sierra.com', datetime.datetime(1963, 1, 31, 10, 20)),
-    ('supergamer@battle.net', datetime.datetime(2008, 1, 31, 10, 20))
+    ('supergamer@battle.net', datetime.datetime(2008, 1, 31, 10, 20)),
+    ('gael@argonaultes.fr', datetime.datetime(2008, 1, 31, 10, 20))
 ]
 cursor.executemany("INSERT INTO subscribers VALUES(?, ?)", data)
 connection.commit()
@@ -47,8 +55,9 @@ connection.close()
 
 
 app = Flask(__name__)
-
-
+app.config['SECRET_KEY']='supersecret'
+app.config['WTF_CSRF_TIME_LIMIT'] = 30
+csrf = CSRFProtect(app)
 # metrics
 
 # root index
@@ -73,17 +82,31 @@ def welcome():
 # display newsletter form to subscribe
 @app.get('/subscribe')
 def subscribe():
-    email = request.args.get('email', '')
+    email_input = request.args.get('email', '')
+    try:
+        email = EmailValidator(email_input)
+    except ValueError:
+        return render_template('subscribe.html')
     res_email = ''
     res_sub = ''
-    if email:
-        with sqlite3.connect('newsletter.db') as conn:
-            res = conn.execute(f'SELECT email, subscribed_at FROM subscribers WHERE email = \'{email}\'')
-            email_sub = res.fetchone()
-            if  email_sub is not None:
-                res_email, res_sub = email_sub
-            # flash notice
+    with sqlite3.connect('newsletter.db') as conn:
+        res = conn.execute('SELECT email, subscribed_at FROM subscribers WHERE email = ?', (email.email,))
+        email_sub = res.fetchone()
+        if  email_sub is not None:
+            res_email, res_sub = email_sub
     return render_template('subscribe.html', email = res_email, sub = res_sub)
+
+@app.get('/rawsubscribe')
+def raw_subscribe():
+    email_input = request.args.get('email', '')
+    res_email = ''
+    with sqlite3.connect('newsletter.db') as conn:
+        res = conn.execute(f'SELECT email, subscribed_at FROM subscribers WHERE email = \'{email_input}\'')
+        email_sub = res.fetchone()
+        if  email_sub is not None:
+            res_email = email_sub
+    return res_email
+
 
 @app.post('/subscribe')
 def subscribe_email():

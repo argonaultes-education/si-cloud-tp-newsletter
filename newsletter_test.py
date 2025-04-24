@@ -34,7 +34,7 @@ class TestSubscribe(flask_unittest.ClientTestCase):
             self.assertTrue(re.search(email, rv.data.decode('UTF-8')), email)
 
     def test_wrong_email(self, client):
-        emails = ['gael@gael.com', 'hello@news.fr', 'thisisnotanemail']
+        emails = ['gael@gael.com', 'hello@news.fr', 'thisisnotanemail', "' or 1 = 1,--"]
         for email in emails:
             rv = client.get(f'/subscribe?email={email}')
             self.assertFalse(re.search(email, rv.data.decode('UTF-8')), email)
