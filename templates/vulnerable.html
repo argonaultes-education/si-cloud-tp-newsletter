@@ -1,0 +1,15 @@
+<html>
+    <body>
+        <div id="hello">DIV</div>
+        <div>
+            <label for="inputhello">Hello</label>
+            <input type="text" id="inputhello" name="inputhello" value="coucou">
+            <input type="submit" value="clickme" onclick="clickmefun()">
+        </div>
+    </body>
+    <script type="text/javascript">
+        function clickmefun() {
+            document.getElementById("hello").innerHTML = document.getElementById("inputhello").value;
+        }
+    </script>
+</html>
