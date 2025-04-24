@@ -1,0 +1,80 @@
+<html>
+    <head>
+        <style>
+            body {
+                background-image: url(http://localhost:5000/static/bg1.jpg);
+                background-size: cover;
+                background-repeat: no-repeat;
+            }
+            h1 {
+                color: green;
+                text-align: center;
+                font-size: 100pt;
+                font-family: 'Courier New', Courier, monospace;
+            }
+            form {
+                text-align: center;
+            }
+            #labelemail {
+                color: white;
+                font-size: 2em;
+            }
+            #email {
+                color: black;
+                font-size: 3em;
+                text-align: center;
+            }
+            .email-ok {
+                color: white;
+                font-size: 3em;
+                text-align: center;
+                margin-bottom: 25px;
+            }
+            #subscribe {
+                font-size: 2em;
+            }
+            #check {
+                font-size: 2em;
+            }
+            .form-div {
+                margin-bottom: 50px;
+            }
+            .spacer {
+                margin-bottom: 50px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Newsletter subscription - Evil Site</h1>
+
+        <form action="http://localhost:5000/subscribe" method="POST">
+            <!-- <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> -->
+            <div class="form-div">
+                <label for="email" id="labelemail">E-Mail</label>
+            </div>
+            <div class="form-div">
+                <input type="text" id="email" name="email">
+            </div>
+            <div>
+                <input type="submit" value="Subscribe" id="subscribe">
+            </div>
+        </form>
+        <div class="spacer">&nbsp;</div>
+        <form action="http://localhost:5000/subscribe" method="GET">
+            <div class="form-div">
+                <label for="email" id="labelemail">E-Mail</label>
+            </div>
+            <div class="form-div">
+                <input type="text" id="email" name="email">
+            </div>
+            <div>
+                <input type="submit" value="Check" id="Check">
+            </div>
+        </form>
+    </body>
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById('email').innerHTML = ""
+        });
+    </script>
+</html>
